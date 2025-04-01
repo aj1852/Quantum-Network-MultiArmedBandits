@@ -65,14 +65,18 @@ function [Fidelity,total_time_ES] = EntanglementSwap_NoiseProbabilities(Node_Psi
                 Node_Psi_MemoryTime(Next_NodeIndx).P_bitflipLeft = (1-exp(-t_wait * r_dephase));      %prob error for q4 in fn ES_ProbErr
                 
                 %Call function 'EntanglementSwap_Noises'
-                [ finalQBitDensityMatrix, avg_fidelity ] = EntanglementSwap_Noises(EP_ToTeleport_DM,EP_Channel_DM,Node_Psi_MemoryTime(Current_NodeIndx).P_bitflipLeft,Node_Psi_MemoryTime(Current_NodeIndx).P_bitflipRight,Node_Psi_MemoryTime(Next_NodeIndx).P_bitflipLeft, p_BSM, p_GateErrors);    
+                [ finalQBitDensityMatrix, avg_fidelity ] = EntanglementSwap_Noises(EP_ToTeleport_DM,EP_Channel_DM,Node_Psi_MemoryTime(Current_NodeIndx).P_bitflipLeft,Node_Psi_MemoryTime(Current_NodeIndx).P_bitflipRight,Node_Psi_MemoryTime(Next_NodeIndx).P_bitflipLeft, p_BSM, p_GateErrors); 
+                %added
+                % Apply DEJMPS to the final density matrix (rho1 and rho2)
+                purified_rho = run_dejmps(finalQBitDensityMatrix, finalQBitDensityMatrix);
+
                 %Node_Psi_MemoryTime(nn).P_bitflipRight will be for q3, while Node_Psi_MemoryTime(nn).P_bitflipLeft for q2, Node_Psi_MemoryTime(nn+1).P_bitflipLeft for q4
                 
                 %Update density matrix for EP (obtained from Eswapping) on link (nn-1,nn+1)
                 %Left node of this channel/link ...... Right side memory of this left node
-                Node_Psi_MemoryTime(Prev_NodeIndx).PsiRight_DM_EP = finalQBitDensityMatrix;
+                Node_Psi_MemoryTime(Prev_NodeIndx).PsiRight_DM_EP = purified_rho;
                 %Right node of this channel/link...... Left side memory of this right node
-                Node_Psi_MemoryTime(Next_NodeIndx).PsiLeft_DM_EP = finalQBitDensityMatrix;
+                Node_Psi_MemoryTime(Next_NodeIndx).PsiLeft_DM_EP = purified_rho;
     
                 %For q2, q3, and q4, update/reset memory wait times 
                 Node_Psi_MemoryTime(Current_NodeIndx).MemoryLeftWaitTime = 0;
